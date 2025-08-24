@@ -1,1 +1,1 @@
-# proj3-db
+# InventoryPro-Backend
