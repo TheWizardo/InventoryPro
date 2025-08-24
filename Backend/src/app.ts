@@ -5,6 +5,7 @@ import employeesController from './Controllers/employees-controller';
 import inventoryController from './Controllers/inventoryItem-controller';
 import assemblyController from './Controllers/assembly-controller';
 import projectsController from './Controllers/projects-controller';
+import logsController from './Controllers/inventoryLog-controller';
 import expressRateLimit from 'express-rate-limit';
 import cors from 'cors';
 import logger from './Middleware/logger-mw';
@@ -25,6 +26,7 @@ server.use("/", employeesController);
 server.use("/", inventoryController);
 server.use("/", assemblyController);
 server.use("/", projectsController);
+server.use("/", logsController);
 server.use("*", routeNotFound);
 server.use(catchAll);
 
