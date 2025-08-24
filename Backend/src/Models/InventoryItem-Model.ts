@@ -35,7 +35,7 @@ export const ProductComponentSchema = new Schema<IProductComponent>(
 );
 
 // Inventory Item Schema
-const InventoryItemSchema = new Schema<IInventoryItem>(
+export const InventoryItemSchema = new Schema<IInventoryItem>(
   {
     itemName: { type: String, required: true },
     sku: { type: String, required: true, unique: true },
