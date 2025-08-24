@@ -1,7 +1,8 @@
 export interface ProductComponent {
-  item: InventoryItem;
+  item: InventoryItem | string;
   quantity: number;
 }
+
 
 export interface InventoryItem {
   _id: string;
@@ -34,17 +35,26 @@ export interface Employee {
 export interface Project {
   _id: string;
   name: string;
-  dueDate: Date;
+  dueDate: Date | string;
   products: ProductComponent[];
-}
-
-export interface BackendProject {
-  name: string;
-  dueDate: string;
-  products: { item: string, quantity: number }[];
 }
 
 export interface StockAdjustment {
   _id: string;
   amount: number
+}
+
+export interface LogRegistry {
+  _id: string
+  items: ProductComponent[];
+  employee: Employee;
+  description: string;
+  registrationDate: Date;
+}
+
+export interface LogRegistryBackend {
+  items: ProductComponent[];
+  employee: Employee | string;
+  description: string;
+  registrationDate: Date | string;
 }

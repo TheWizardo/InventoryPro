@@ -48,7 +48,7 @@ import {
   inventoryService,
   assemblyService
 } from "@/lib/services";
-import { Project, InventoryItem, StockAdjustment, BackendProject, AssembledItem } from "@/lib/types";
+import { Project, InventoryItem, StockAdjustment, AssembledItem, ProductComponent } from "@/lib/types";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -57,10 +57,10 @@ export default function ProjectsPage() {
   const [isNewProjectOpen, setIsNewProjectOpen] = useState(false);
   const [isPredictedStockOpen, setIsPredictedStockOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [formData, setFormData] = useState<BackendProject>({
+  const [formData, setFormData] = useState<Omit<Project, "_id">>({
     name: "",
     dueDate: "",
-    products: [] as Array<{ item: string; quantity: number }>,
+    products: [] as Array<ProductComponent>,
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [assemblyData, setAssemblyData] = useState<
@@ -169,7 +169,7 @@ export default function ProjectsPage() {
       const rawFormAdjustments = [...formData.products];
       const rawAdjustments = await Promise.all(
         rawFormAdjustments.map(async (p) => {
-          const fetchedItem = await inventoryService.fetchOne(p.item);
+          const fetchedItem = await inventoryService.fetchOne(p.item as string);
           const item = await fetchedItem.json();
           return {
             item,
@@ -188,7 +188,7 @@ export default function ProjectsPage() {
 
       const response = await (editingProject
         ? projectService.updateProject(editingProject._id, formData)
-        : projectService.addProject(formData));
+        : projectService.addProject(formData as Project));
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -220,7 +220,7 @@ export default function ProjectsPage() {
       name: project.name,
       dueDate: new Date(project.dueDate).toISOString().split("T")[0],
       products: project.products.map((p) => ({
-        item: p.item._id,
+        item: (p.item as InventoryItem)._id,
         quantity: p.quantity,
       })),
     });
@@ -531,7 +531,7 @@ export default function ProjectsPage() {
                                       const { assembled, target } =
                                         getAssemblyProgress(
                                           project._id,
-                                          product.item._id,
+                                          (product.item as InventoryItem)._id,
                                           product.quantity
                                         );
                                       return (
@@ -542,13 +542,13 @@ export default function ProjectsPage() {
                                           <div className="flex items-center gap-3">
                                             <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                                             <span className="font-medium">
-                                              {product.item.itemName}
+                                              {(product.item as InventoryItem).itemName}
                                             </span>
                                             <Badge
                                               variant="outline"
                                               className="text-xs"
                                             >
-                                              {product.item.sku}
+                                              {(product.item as InventoryItem).sku}
                                             </Badge>
                                           </div>
                                           <div className="flex items-center gap-4">
@@ -619,7 +619,7 @@ export default function ProjectsPage() {
                 <Input
                   id="dueDate"
                   type="date"
-                  value={formData.dueDate}
+                  value={formData.dueDate as string}
                   onChange={(e) =>
                     setFormData({ ...formData, dueDate: e.target.value })
                   }
@@ -659,7 +659,7 @@ export default function ProjectsPage() {
                           </Label>
                           <select
                             id={`product-${index}`}
-                            value={product.item}
+                            value={product.item as string}
                             onChange={(e) =>
                               updateProductComponent(
                                 index,

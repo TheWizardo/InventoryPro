@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Package, Settings, Users, Menu, Warehouse, FolderOpen } from "lucide-react"
+import { LayoutDashboard, Package, Settings, Users, Menu, Warehouse, FolderOpen, FileText } from "lucide-react"
 
 const navigation = [
   {
@@ -33,6 +33,11 @@ const navigation = [
     name: "Employees",
     href: "/employees",
     icon: Users,
+  },
+  {
+    name: "Log",
+    href: "/log",
+    icon: FileText,
   },
 ]
 

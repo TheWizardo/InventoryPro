@@ -5,7 +5,8 @@ export const API_CONFIG = {
     INVENTORY: "/api/inventory",
     EMPLOYEES: "/api/employees",
     ASSEMBLY: "/api/assemblies",
-    PROJECTS: "/api/projects", // Added projects endpoint for project management functionality
+    PROJECTS: "/api/projects",
+    LOGS: "/api/logs",
   },
 } as const
 

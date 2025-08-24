@@ -32,7 +32,7 @@ export default function EmployeesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewEmployeeOpen, setIsNewEmployeeOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
-  const [newEmployee, setNewEmployee] = useState<Employee>({
+  const [newEmployee, setNewEmployee] = useState<Omit<Employee, "_id">>({
     name: "",
     isEmployeed: true,
   });
@@ -94,7 +94,7 @@ export default function EmployeesPage() {
 
     setSaving(true);
     try {
-      const response = await employeeService.addEmployee(newEmployee);
+      const response = await employeeService.addEmployee(newEmployee as Employee);
       if (response.ok) {
         await fetchEmployees();
         setNewEmployee({ name: "", isEmployeed: true });

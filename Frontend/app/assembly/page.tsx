@@ -47,8 +47,9 @@ import {
   employeeService,
   projectService,
   inventoryService,
+  logService,
 } from "@/lib/services";
-import { InventoryItem, ProductComponent, Assembly } from "@/lib/types"; // adjust import paths
+import { InventoryItem, ProductComponent, AssembledItem, Project, Employee, LogRegistryBackend } from "@/lib/types"; // adjust import paths
 
 type SortField =
   | "serialNumber"
@@ -59,8 +60,8 @@ type SortField =
 type SortDirection = "asc" | "desc";
 
 export default function AssemblyPage() {
-  const [assemblies, setAssemblies] = useState<Assembly[]>([]);
-  const [availableItems, setAvailableItems] = useState<IInventoryItem[]>([]);
+  const [assemblies, setAssemblies] = useState<AssembledItem[]>([]);
+  const [availableItems, setAvailableItems] = useState<InventoryItem[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [isNewAssemblyOpen, setIsNewAssemblyOpen] = useState(false);
@@ -72,7 +73,7 @@ export default function AssemblyPage() {
     open: false,
     serialNumber: "",
   });
-  const [newAssembly, setNewAssembly] = useState<NewAssembly>({
+  const [newAssembly, setNewAssembly] = useState({
     item: "",
     employee: "",
     project: "",
@@ -123,7 +124,7 @@ export default function AssemblyPage() {
 
       const data = await response.json();
       const supportedItems = data.filter(
-        (item: IInventoryItem) => item.isSupported
+        (item: InventoryItem) => item.isSupported
       );
       setAvailableItems(supportedItems);
     } catch (error) {
@@ -160,7 +161,7 @@ export default function AssemblyPage() {
     }
   };
 
-  const handleInputChange = (field: keyof Assembly, value: string) => {
+  const handleInputChange = (field: keyof AssembledItem, value: string) => {
     setNewAssembly({ ...newAssembly, [field]: value });
   };
 
@@ -189,17 +190,25 @@ export default function AssemblyPage() {
 
       const response = await assemblyService.addAssembly(payload);
       if (response.ok) {
-        const newAssembledItem = await inventoryService.fetchOne(
+        const itemResponse = await inventoryService.fetchOne(
           newAssembly.item
         );
+        const newAssembledItem: InventoryItem = await itemResponse.json()
         const stockAdjustments = inventoryService
-          .flattenToLeafComponents(await newAssembledItem.json())
+          .flattenToLeafComponents(newAssembledItem)
           .map((a) => {
             return { _id: a._id, amount: 0 - a.amount };
           });
-        console.log(stockAdjustments);
         await inventoryService.adjustStock(stockAdjustments);
-        const createdAssembly = await response.json();
+        const createdAssembly: AssembledItem = await response.json();
+        const logRegistry: LogRegistryBackend = {
+          items: stockAdjustments.map(e => ({ item: e._id, quantity: e.amount * -1 })),
+          description: `Created Assembly '${createdAssembly.item.itemName}' for ${createdAssembly.project.name}`,
+          employee: createdAssembly.employee,
+          registrationDate: (new Date()).toISOString()
+        }
+        console.log(logRegistry);
+        await logService.registerLog(logRegistry);
         await fetchAssemblies();
         setNewAssembly({
           item: "",
@@ -302,7 +311,7 @@ export default function AssemblyPage() {
     }
   };
 
-  const getSortedAssemblies = (items: Assembly[]) => {
+  const getSortedAssemblies = (items: AssembledItem[]) => {
     return [...items].sort((a, b) => {
       let aValue: any;
       let bValue: any;
@@ -502,7 +511,7 @@ export default function AssemblyPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        {formatDate(assembly.productionDate)}
+                        {formatDate(assembly.productionDate.toString())}
                       </div>
                     </TableCell>
                     <TableCell>

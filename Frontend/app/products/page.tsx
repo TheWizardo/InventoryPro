@@ -38,7 +38,7 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [isNewProductOpen, setIsNewProductOpen] = useState(false);
-  const [newProduct, setNewProduct] = useState<InventoryItem>({
+  const [newProduct, setNewProduct] = useState<Omit<InventoryItem, "_id">>({
     itemName: "",
     stock: 1,
     minStock: 0,
@@ -140,13 +140,13 @@ export default function ProductsPage() {
 
       const filteredComplex = showNonSupported
         ? complexData.filter(
-            (item: InventoryItem) =>
-              item.components && item.components.length > 0
-          )
+          (item: InventoryItem) =>
+            item.components && item.components.length > 0
+        )
         : complexData.filter(
-            (item: InventoryItem) =>
-              item.isSupported && item.components && item.components.length > 0
-          );
+          (item: InventoryItem) =>
+            item.isSupported && item.components && item.components.length > 0
+        );
 
       setProducts(filteredProducts);
       setComplexItems(filteredComplex);
@@ -171,7 +171,7 @@ export default function ProductsPage() {
   const addComponentRow = () => {
     setNewProduct((prev) => ({
       ...prev,
-      components: [...prev.components, { item: "", quantity: 1 }],
+      components: [...(prev.components || []), { item: "", quantity: 1 }],
     }));
   };
 
@@ -182,7 +182,7 @@ export default function ProductsPage() {
   ) => {
     setNewProduct((prev) => ({
       ...prev,
-      components: prev.components.map((comp, i) =>
+      components: prev.components?.map((comp, i) =>
         i === index ? { ...comp, [field]: value } : comp
       ),
     }));
@@ -191,7 +191,7 @@ export default function ProductsPage() {
   const removeComponent = (index: number) => {
     setNewProduct((prev) => ({
       ...prev,
-      components: prev.components.filter((_, i) => i !== index),
+      components: prev.components?.filter((_, i) => i !== index),
     }));
   };
 
@@ -209,7 +209,7 @@ export default function ProductsPage() {
       const response = await inventoryService.addItem({
         ...newProduct,
         stock: 0,
-      });
+      } as InventoryItem);
 
       if (response.ok) {
         await fetchProducts();
@@ -217,6 +217,8 @@ export default function ProductsPage() {
         setNewProduct({
           itemName: "",
           sku: "",
+          stock: 0,
+          minStock: 0,
           vendor: "v-armed", // Reset to default vendor
           link: "",
           isAssembledProduct: false,
@@ -366,11 +368,11 @@ export default function ProductsPage() {
                     </Button>
                   </div>
 
-                  {newProduct.components.map((component, index) => (
+                  {newProduct.components?.map((component, index) => (
                     <div key={index} className="flex gap-2 items-end">
                       <div className="flex-1">
                         <Select
-                          value={component.item}
+                          value={component.item as string}
                           onValueChange={(value) =>
                             updateComponent(index, "item", value)
                           }

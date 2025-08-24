@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
 
   const handleInputChange = (
     field: keyof InventoryItem,
-    value: string | boolean
+    value: string | boolean | number
   ) => {
     if (!editedProduct) return;
     setEditedProduct({ ...editedProduct, [field]: value });
@@ -270,7 +270,7 @@ export default function ProductDetailPage() {
                 onChange={(e) =>
                   handleInputChange(
                     "stock",
-                    Number.parseInt(e.target.value) || 0
+                    +e.target.value
                   )
                 }
               />
