@@ -22,6 +22,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { VendorAutocomplete } from "@/components/vendor-autocomplete"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Search, Package, Settings, Plus, X } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
@@ -472,8 +473,23 @@ export default function ProductsPage() {
           {filteredProducts.map((product) => (
             <Card
               key={product._id}
-              className="hover:shadow-md transition-shadow"
+              className="hover:shadow-md transition-shadow relative"
             >
+              {inventoryService.doesItemUsesNonSupportedComponents(product) && <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+                    >
+                      !
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This product contains unsupported sub-items</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>}
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -524,7 +540,22 @@ export default function ProductsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredComplexItems.map((item) => (
-            <Card key={item._id} className="hover:shadow-md transition-shadow">
+            <Card key={item._id} className="hover:shadow-md transition-shadow relative">
+              {inventoryService.doesItemUsesNonSupportedComponents(item) && <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 z-10 h-6 w-6 rounded-full p-0 flex items-center justify-center text-xs font-bold"
+                    >
+                      !
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>This product contains unsupported sub-items</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>}
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -538,6 +569,7 @@ export default function ProductsPage() {
                         }
                       >
                         {item.itemName}
+                        {!item.isSupported && <Badge variant="secondary">Not-Supported</Badge>}
                       </CardTitle>
                     </Link>
                     <p className="text-sm text-muted-foreground">
