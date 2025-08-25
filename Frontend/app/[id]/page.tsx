@@ -71,16 +71,16 @@ export default function ProductDetailPage() {
 
   const handleSave = async () => {
     if (!editedProduct) return;
-    if (employeeId === "" || employeeId === undefined) {
-      toast({
-        title: "Error",
-        description: "Please fill out employee",
-        variant: "destructive",
-      });
-      return;
-    }
 
     if (editedProduct.stock !== product?.stock) {
+      if (employeeId === "" || employeeId === undefined) {
+        toast({
+          title: "Error",
+          description: "Please fill out employee",
+          variant: "destructive",
+        });
+        return;
+      }
       const logRegistry: LogRegistryBackend = {
         items: [{ item: editedProduct._id, quantity: editedProduct.stock }],
         description: "Stock Overwrite",
