@@ -36,7 +36,7 @@ class BaseService {
     return await this.fetch(uri, "PUT", edits);
   }
 
-  public async add<T>(uri: string, newItem: Omit<T,"_id">): Promise<Response> {
+  public async add<T>(uri: string, newItem: Omit<T, "_id">): Promise<Response> {
     return await this.fetch(uri, "POST", newItem);
   }
 }
@@ -148,6 +148,15 @@ class InventoryService {
       };
     });
   }
+
+  public doesItemUsesNonSupportedComponents(complexItem: InventoryItem): boolean {
+    if (!complexItem.components) {
+      return !complexItem.isSupported;
+    }
+    const allSubitemsSupportedArr = complexItem.components.map(c => this.doesItemUsesNonSupportedComponents(c.item as InventoryItem) || !(c.item as InventoryItem).isSupported);
+    const allSubitemsSupported = !allSubitemsSupportedArr.every(v => !v);
+    return allSubitemsSupported;
+  }
 }
 
 class EmployeeService {
@@ -177,26 +186,24 @@ class EmployeeService {
   }
 
   public generateColor(employeeId: string): string {
-    // Create a simple hash from the employee ID
+  function generateHash(id: string): number {
     let hash = 0;
-    for (let i = 0; i < employeeId.length; i++) {
-      const char = employeeId.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash; // Convert to 32-bit integer
+    for (let i = 0; i < id.length; i++) {
+      hash = id.charCodeAt(i) + ((hash << 5) - hash);
     }
-
-    // Convert to positive number
-    const positiveHash = Math.abs(hash);
-
-    // Generate HSL values from hash
-    const hue = (positiveHash * 1.5) % 360; // Full range 0-360
-    const saturation = 0.5 + (positiveHash % 50) / 100; // Range 0.5-1.0
-    const luminosity = 0.5 + ((positiveHash >> 8) % 50) / 100; // Range 0.5-1.0
-
-    return `hsl(${hue}, ${Math.round(saturation * 100)}%, ${Math.round(
-      luminosity * 100
-    )}%)`;
+    return hash;
   }
+  const hash = Math.abs(generateHash(employeeId));
+  
+  // Distribute hue more evenly
+  const hue = hash % 360;
+  // Spread saturation between 50–90%
+  const saturation = 50 + (hash % 41); // 50–90
+  // Spread lightness between 40–70%
+  const lightness = 40 + ((hash >> 3) % 31); // 40–70
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 }
 
 class AssemblyService {
