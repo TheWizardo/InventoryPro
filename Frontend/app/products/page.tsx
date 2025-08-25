@@ -205,6 +205,15 @@ export default function ProductsPage() {
       return;
     }
 
+    if (newProduct.components && newProduct.components.length < 2) {
+      toast({
+        title: "Error",
+        description: "Product must have at least two components",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const response = await inventoryService.addItem({
         ...newProduct,
@@ -383,15 +392,19 @@ export default function ProductsPage() {
                           <SelectContent>
                             {availableComponents.map((item) => (
                               <SelectItem key={item._id} value={item._id}>
-                                {item.itemName}
-                                {!item.isSupported && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="ml-2 text-xs"
-                                  >
-                                    Non-supported
-                                  </Badge>
-                                )}
+                                <span>{item.itemName}</span>
+                                {item.components && <Badge
+                                  variant={"outline"}
+                                  className="text-xs"
+                                >
+                                  Complex
+                                </Badge>}
+                                {!item.isSupported && <Badge
+                                  variant={"destructive"}
+                                  className="text-xs"
+                                >
+                                  Not-supported
+                                </Badge>}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -533,11 +546,7 @@ export default function ProductsPage() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Stock:</span>
-                  <span className="font-medium">{item.stock}</span>
-                </div>
+              <CardContent className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Vendor:</span>
                   <span className="font-medium">{item.vendor}</span>

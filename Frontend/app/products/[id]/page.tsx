@@ -140,6 +140,14 @@ export default function ProductDetailPage() {
 
   const handleSave = async () => {
     if (!editedProduct) return;
+    if (editedProduct.components && editedProduct.components.length < 2) {
+      toast({
+        title: "Error",
+        description: "Product must have at least two components",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSaving(true);
     try {
@@ -219,7 +227,7 @@ export default function ProductDetailPage() {
               <Badge
                 variant={product.isAssembledProduct ? "default" : "outline"}
               >
-                {product.isAssembledProduct ? "Assembly Product" : "Component"}
+                {product.isAssembledProduct ? "Assembly Product" : "Complex Item"}
               </Badge>
               <Badge variant="secondary">SKU: {product.sku}</Badge>
             </div>
@@ -333,7 +341,7 @@ export default function ProductDetailPage() {
         </Card>
       </div>
 
-      {editedProduct.isAssembledProduct && (
+      {editedProduct.components && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -345,7 +353,7 @@ export default function ProductDetailPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {editedProduct.components && editedProduct.components.length > 0 ? (
+            {editedProduct.components.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -376,19 +384,18 @@ export default function ProductDetailPage() {
                               <SelectItem key={item._id} value={item._id}>
                                 <div className="flex items-center gap-2">
                                   <span>{item.itemName}</span>
-                                  <Badge
-                                    variant={
-                                      item.isSupported ? "default" : "secondary"
-                                    }
+                                  {item.components && <Badge
+                                    variant={"outline"}
                                     className="text-xs"
                                   >
-                                    {item.isSupported
-                                      ? "Supported"
-                                      : "Non-supported"}
-                                  </Badge>
-                                  <span className="text-muted-foreground">
-                                    (Stock: {item.stock})
-                                  </span>
+                                    Complex
+                                  </Badge>}
+                                  {!item.isSupported && <Badge
+                                    variant={"destructive"}
+                                    className="text-xs"
+                                  >
+                                    Not-supported
+                                  </Badge>}
                                 </div>
                               </SelectItem>
                             ))}

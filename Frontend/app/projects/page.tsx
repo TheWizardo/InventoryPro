@@ -353,8 +353,9 @@ export default function ProjectsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Item</TableHead>
+                  <TableHead>Item Name</TableHead>
                   <TableHead>Predicted Quantity</TableHead>
+                  <TableHead># to be used</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -364,11 +365,18 @@ export default function ProjectsPage() {
                       <Label htmlFor="name">{inventoryItem.itemName}</Label>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center">
                         <span className="w-20 text-center">
                           {inventoryItem.stock}
                         </span>
                         {getBadgeByStockAdjustment(inventoryItem)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span className="w-20 text-center">
+                          {adjustments.filter(a => a._id === inventoryItem._id).length > 0 && adjustments.filter(a => a._id === inventoryItem._id)[0]?.amount * -1}
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
