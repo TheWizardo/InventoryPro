@@ -207,7 +207,6 @@ export default function AssemblyPage() {
           employee: createdAssembly.employee,
           registrationDate: (new Date()).toISOString()
         }
-        console.log(logRegistry);
         await logService.registerLog(logRegistry);
         await fetchAssemblies();
         setNewAssembly({

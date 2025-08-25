@@ -31,9 +31,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { VendorAutocomplete } from "@/components/vendor-autocomplete";
-import { inventoryService } from "@/lib/services";
-import { InventoryItem } from "@/lib/types";
+import { inventoryService, logService, employeeService } from "@/lib/services";
+import { InventoryItem, Employee, LogRegistryBackend } from "@/lib/types";
 import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
 interface StockAdjustmentString {
   _id: string;
@@ -54,16 +55,19 @@ const StockAdjustmentDialog = ({
   isRemoval,
   stockAdjustments,
   inventory,
+  employees,
   updateStockAdjustment,
   removeStockAdjustmentRow,
   addStockAdjustmentRow,
   handleStockAdjustment,
+  setEmployee,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   isRemoval: boolean;
   stockAdjustments: StockAdjustmentString[];
   inventory: InventoryItem[];
+  employees: Employee[];
   updateStockAdjustment: (
     index: number,
     field: keyof StockAdjustmentString,
@@ -72,6 +76,7 @@ const StockAdjustmentDialog = ({
   removeStockAdjustmentRow: (index: number) => void;
   addStockAdjustmentRow: () => void;
   handleStockAdjustment: (isRemoval: boolean) => void;
+  setEmployee: (id: string) => void;
 }) => {
   const [validationErrors, setValidationErrors] = useState<{
     [key: number]: { item?: boolean; quantity?: boolean };
@@ -222,10 +227,35 @@ const StockAdjustmentDialog = ({
               <Plus className="h-4 w-4 mr-2" />
               Add Row
             </Button>
-            <Button onClick={handleSubmit}>
-              {isRemoval ? "Remove Stock" : "Add Stock"}
-            </Button>
           </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="employee">Employee *</Label>
+          <Select
+            onValueChange={(value) => setEmployee(value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select an employee" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.map((employee) => (
+                <SelectItem key={employee._id} value={employee._id}>
+                  <span
+                    style={{
+                      color: employeeService.generateColor(employee._id),
+                    }}
+                  >
+                    {employee.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={handleSubmit}>
+            {isRemoval ? "Remove Stock" : "Add Stock"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -234,6 +264,8 @@ const StockAdjustmentDialog = ({
 
 export default function InventoryDashboard() {
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
+  const [employeeId, setEmployeeId] = useState<string>();
   const [stockEdits, setStockEdits] = useState<StockEdit[]>([]);
   const [stockAdjustments, setStockAdjustments] = useState<StockAdjustmentString[]>(
     []
@@ -246,12 +278,7 @@ export default function InventoryDashboard() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [isStockEditable, setIsStockEditable] = useState(false);
   const [showNonSupported, setShowNonSupported] = useState(false);
-  const [editingRowId, setEditingRowId] = useState<string | null>(null);
-  const [rowEdits, setRowEdits] = useState<{ [key: string]: InventoryItem }>(
-    {}
-  );
   const newItemTemplate = {
-    _id: "",
     itemName: "",
     sku: "",
     vendor: "",
@@ -261,11 +288,21 @@ export default function InventoryDashboard() {
     stock: 0,
     minStock: 0,
   }
-  const [newItem, setNewItem] = useState<InventoryItem>({ ...newItemTemplate });
+  const [newItem, setNewItem] = useState<Omit<InventoryItem, "_id">>({
+    itemName: "",
+    sku: "",
+    vendor: "",
+    link: "",
+    isSupported: true,
+    isAssembledProduct: false,
+    stock: 0,
+    minStock: 0,
+  });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchInventory();
+    fetchEmployees();
   }, []);
 
   const fetchInventory = async () => {
@@ -282,6 +319,17 @@ export default function InventoryDashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await employeeService.fetchAll();
+      const data = await response.json();
+      const activeEmployees = data.filter((emp: Employee) => emp.isEmployeed);
+      setAllEmployees(activeEmployees);
+    } catch (error) {
+      console.error("Failed to fetch employees:", error);
     }
   };
 
@@ -309,6 +357,15 @@ export default function InventoryDashboard() {
   };
 
   const handleSaveAllChanges = async () => {
+    if (employeeId === "" || employeeId === undefined) {
+      toast({
+        title: "Error",
+        description: "Please fill out employee",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (stockEdits.length === 0) {
       toast({
         title: "No Changes",
@@ -319,6 +376,13 @@ export default function InventoryDashboard() {
 
     try {
       const response = await inventoryService.overrideStock(stockEdits);
+      const logRegistry: LogRegistryBackend = {
+        items: stockEdits.map(e => ({ item: e._id, quantity: e.newStock })),
+        description: "Stock Overwrite",
+        employee: employeeId,
+        registrationDate: (new Date()).toISOString()
+      }
+      await logService.registerLog(logRegistry);
       if (response.ok) {
         await fetchInventory();
         setStockEdits([]);
@@ -328,6 +392,7 @@ export default function InventoryDashboard() {
           description: `Updated stock for ${stockEdits.length} items`,
         });
       }
+      setEmployeeId(undefined);
     } catch (error) {
       toast({
         title: "Error",
@@ -366,6 +431,15 @@ export default function InventoryDashboard() {
   }, []);
 
   const handleStockAdjustment = async (isRemoval: boolean) => {
+    if (employeeId === "" || employeeId === undefined) {
+      toast({
+        title: "Error",
+        description: "Please fill out employee",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const validAdjustments = stockAdjustments.filter((adj) => {
       const quantity = Number(adj.quantity);
       return adj._id && quantity > 0 && !isNaN(quantity);
@@ -387,6 +461,13 @@ export default function InventoryDashboard() {
       }));
 
       const response = await inventoryService.adjustStock(adjustments);
+      const logRegistry: LogRegistryBackend = {
+        items: adjustments.map(e => ({ item: e._id, quantity: e.amount * (isRemoval ? -1 : 1) })),
+        description: isRemoval ? "Removed Items" : "Added Items",
+        employee: employeeId,
+        registrationDate: (new Date()).toISOString()
+      }
+      await logService.registerLog(logRegistry);
       if (response.ok) {
         await fetchInventory();
         setStockAdjustments([]);
@@ -397,6 +478,7 @@ export default function InventoryDashboard() {
           description: `Stock ${isRemoval ? "removed" : "added"} successfully`,
         });
       }
+      setEmployeeId(undefined);
     } catch (error) {
       toast({
         title: "Error",
@@ -457,95 +539,6 @@ export default function InventoryDashboard() {
     return baseClass;
   };
 
-  const handleRowFieldChange = (
-    itemId: string,
-    field: keyof InventoryItem,
-    value: string | boolean
-  ) => {
-    setRowEdits((prev) => ({
-      ...prev,
-      [itemId]: {
-        ...prev[itemId],
-        [field]: value,
-      },
-    }));
-  };
-
-  const getCurrentRowValues = (item: InventoryItem): InventoryItem => {
-    return (
-      rowEdits[item._id] || {
-        _id: item._id,
-        itemName: item.itemName,
-        sku: item.sku,
-        vendor: item.vendor,
-        link: item.link || "",
-        isSupported: item.isSupported,
-      }
-    );
-  };
-
-  const handleRowDoubleClick = (item: InventoryItem) => {
-    setEditingRowId(item._id);
-    // Initialize row edit data
-    setRowEdits((prev) => ({
-      ...prev,
-      [item._id]: {
-        _id: item._id,
-        itemName: item.itemName,
-        sku: item.sku,
-        vendor: item.vendor,
-        link: item.link || "",
-        isSupported: item.isSupported,
-        isAssembledProduct: item.isAssembledProduct,
-        stock: item.stock,
-        minStock: item.minStock
-      },
-    }));
-  };
-
-  const handleSaveRowChanges = async (itemId: string) => {
-    const rowEdit = rowEdits[itemId];
-    if (!rowEdit) return;
-
-    try {
-      const response = await inventoryService.updateItem(itemId, {
-        itemName: rowEdit.itemName,
-        sku: rowEdit.sku,
-        vendor: rowEdit.vendor,
-        link: rowEdit.link,
-        isSupported: rowEdit.isSupported,
-      });
-
-      if (response.ok) {
-        await fetchInventory();
-        setEditingRowId(null);
-        setRowEdits((prev) => {
-          const updated = { ...prev };
-          delete updated[itemId];
-          return updated;
-        });
-        toast({
-          title: "Success",
-          description: "Item updated successfully",
-        });
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update item",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleCancelRowChanges = (itemId: string) => {
-    setEditingRowId(null);
-    setRowEdits((prev) => {
-      const updated = { ...prev };
-      delete updated[itemId];
-      return updated;
-    });
-  };
 
   const handleCreateItem = async () => {
     // Add function to create new item
@@ -796,51 +789,17 @@ export default function InventoryDashboard() {
             </TableHeader>
             <TableBody>
               {displayedInventory.map((item) => {
-                const isEditing = editingRowId === item._id;
-                const currentValues = getCurrentRowValues(item);
 
                 return (
                   <TableRow
                     key={item._id}
                     className={getItemRowClassName(item)}
-                    onDoubleClick={() =>
-                      !isEditing && handleRowDoubleClick(item)
-                    }
-                    style={{ cursor: !isEditing ? "pointer" : "default" }}
                   >
                     <TableCell className="font-medium">
-                      {isEditing ? (
-                        <Input
-                          value={currentValues.itemName}
-                          onChange={(e) =>
-                            handleRowFieldChange(
-                              item._id,
-                              "itemName",
-                              e.target.value
-                            )
-                          }
-                          className="w-full"
-                        />
-                      ) : (
-                        item.itemName
-                      )}
+                      {item.itemName}
                     </TableCell>
                     <TableCell>
-                      {isEditing ? (
-                        <Input
-                          value={currentValues.sku}
-                          onChange={(e) =>
-                            handleRowFieldChange(
-                              item._id,
-                              "sku",
-                              e.target.value
-                            )
-                          }
-                          className="w-full"
-                        />
-                      ) : (
-                        item.sku
-                      )}
+                      {item.sku}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -875,70 +834,46 @@ export default function InventoryDashboard() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {isEditing ? (
-                        <Input
-                          value={currentValues.vendor}
-                          onChange={(e) =>
-                            handleRowFieldChange(
-                              item._id,
-                              "vendor",
-                              e.target.value
-                            )
-                          }
-                          className="w-full"
-                        />
-                      ) : (
-                        item.vendor
-                      )}
+                      {item.vendor}
                     </TableCell>
                     <TableCell>
-                      {isEditing ? (
-                        <Checkbox
-                          checked={currentValues.isSupported}
-                          onCheckedChange={(checked) =>
-                            handleRowFieldChange(
-                              item._id,
-                              "isSupported",
-                              checked as boolean
-                            )
-                          }
-                        />
-                      ) : (
-                        <Checkbox checked={item.isSupported} disabled />
-                      )}
+                      <Checkbox checked={item.isSupported} disabled />
                     </TableCell>
                     <TableCell>
-                      {isEditing ? (
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => handleSaveRowChanges(item._id)}
-                          >
-                            <Save className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCancelRowChanges(item._id)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRowDoubleClick(item)}
-                        >
+                      <Link href={`/${item._id}`}>
+                        <Button size="sm" className="w-full">
                           <Edit className="h-4 w-4" />
                         </Button>
-                      )}
+                      </Link>
                     </TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
+          {isStockEditable && <div className="space-y-2">
+            <Label htmlFor="employee">Employee *</Label>
+            <Select
+              onValueChange={(value) => setEmployeeId(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an employee" />
+              </SelectTrigger>
+              <SelectContent>
+                {allEmployees.map((employee) => (
+                  <SelectItem key={employee._id} value={employee._id}>
+                    <span
+                      style={{
+                        color: employeeService.generateColor(employee._id),
+                      }}
+                    >
+                      {employee.name}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>}
         </CardContent>
       </Card>
 
@@ -972,10 +907,12 @@ export default function InventoryDashboard() {
           isRemoval={false}
           stockAdjustments={stockAdjustments}
           inventory={inventory}
+          employees={allEmployees}
           updateStockAdjustment={updateStockAdjustment}
           removeStockAdjustmentRow={removeStockAdjustmentRow}
           addStockAdjustmentRow={addStockAdjustmentRow}
           handleStockAdjustment={handleStockAdjustment}
+          setEmployee={setEmployeeId}
         />
 
         <StockAdjustmentDialog
@@ -984,14 +921,14 @@ export default function InventoryDashboard() {
           isRemoval={true}
           stockAdjustments={stockAdjustments}
           inventory={inventory}
+          employees={allEmployees}
           updateStockAdjustment={updateStockAdjustment}
           removeStockAdjustmentRow={removeStockAdjustmentRow}
           addStockAdjustmentRow={addStockAdjustmentRow}
           handleStockAdjustment={handleStockAdjustment}
+          setEmployee={setEmployeeId}
         />
       </div>
     </div>
   );
 }
-
-const SortIcon = ({ field }: { field: SortField }) => { };
