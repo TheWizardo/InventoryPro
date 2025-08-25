@@ -610,7 +610,7 @@ export default function InventoryDashboard() {
                 size="sm"
                 onClick={() => setShowNonSupported(!showNonSupported)}
               >
-                {showNonSupported ? "Hide Non-Supported" : "Show Non-Supported"}
+                {showNonSupported ? "Hide Unsupported" : "Show Unsupported"}
               </Button>
               <Dialog open={isNewItemOpen} onOpenChange={setIsNewItemOpen}>
                 <DialogTrigger asChild>

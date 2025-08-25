@@ -53,7 +53,7 @@ export default function ProductsPage() {
       { item: "", quantity: 1 },
     ], // Always start with 2 components by default
   });
-  const [showNonSupported, setShowNonSupported] = useState(false); // Added state for showing non-supported items
+  const [showNonSupported, setShowNonSupported] = useState(false); // Added state for showing Unsupported items
   const [availableComponents, setAvailableComponents] = useState<
     InventoryItem[]
   >([]); // Added state for available components
@@ -275,8 +275,8 @@ export default function ProductsPage() {
             onClick={() => setShowNonSupported(!showNonSupported)}
           >
             {showNonSupported
-              ? "Hide Non-Supported"
-              : "Show Non-Supported Items"}
+              ? "Hide Unsupported"
+              : "Show Unsupported Items"}
           </Button>
           <Dialog open={isNewProductOpen} onOpenChange={setIsNewProductOpen}>
             <DialogTrigger asChild>
