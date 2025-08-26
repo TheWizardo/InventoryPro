@@ -1,6 +1,5 @@
 import InventoryItem, {
   IInventoryItem,
-  IProductComponent,
 } from "../Models/InventoryItem-Model";
 import { Types } from "mongoose";
 import { InvalidData } from "../Models/client-errors";
@@ -51,7 +50,7 @@ async function getItemsByAssembled(yes: boolean): Promise<IInventoryItem[]> {
 
 // Get all inventory items
 export async function getAllInventoryItems(): Promise<IInventoryItem[]> {
-  const allItems = await InventoryItem.find(); // No .lean(), we need documents
+  const allItems = await InventoryItem.find();
 
   // Await the population of all items
   await Promise.all(allItems.map((item) => populateItemDeep(item)));
@@ -72,7 +71,7 @@ async function getInventoryItemById(
 async function getSeveralInventoryItems(
   ids: (string | Types.ObjectId)[]
 ): Promise<IInventoryItem[]> {
-  const items = await InventoryItem.find({ _id: { $in: ids } }); // No .lean(), we need documents
+  const items = await InventoryItem.find({ _id: { $in: ids } });
 
   // Await the population of all items
   await Promise.all(items.map((item) => populateItemDeep(item)));

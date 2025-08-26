@@ -1,6 +1,5 @@
 import Employee, { IEmployee } from "../Models/Employee-Model";
 import { Types } from "mongoose";
-import config from "../Utils/config";
 
 async function getAllEmployees(): Promise<IEmployee[]> {
   const employees = await Employee.find().lean();
