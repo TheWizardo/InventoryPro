@@ -49,7 +49,7 @@ import {
   inventoryService,
   logService,
 } from "@/lib/services";
-import { InventoryItem, ProductComponent, AssembledItem, Project, Employee, LogRegistryBackend } from "@/lib/types"; // adjust import paths
+import { InventoryItem, AssembledItem, Project, Employee, LogRegistryBackend } from "@/lib/types"; // adjust import paths
 
 type SortField =
   | "serialNumber"
@@ -89,7 +89,6 @@ export default function AssemblyPage() {
 
   useEffect(() => {
     fetchAssemblies();
-    fetchAvailableItems();
     fetchEmployees();
     fetchProjects();
 
@@ -114,28 +113,11 @@ export default function AssemblyPage() {
     }
   };
 
-  const fetchAvailableItems = async () => {
-    try {
-      const response = await productService.fetchAll();
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const supportedItems = data.filter(
-        (item: InventoryItem) => item.isSupported
-      );
-      setAvailableItems(supportedItems);
-    } catch (error) {
-      console.error("Failed to fetch available items:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch available products",
-        variant: "destructive",
-      });
-    }
-  };
+  const updateItemsByProject = async (projectId: string) => {
+    const projectProducts = projects.filter(p => p._id === projectId)[0].products;
+    const response = await inventoryService.fetchSeveral(projectProducts.map(p => p.item as string));
+    setAvailableItems(await response.json())
+  }
 
   const fetchEmployees = async () => {
     try {
@@ -162,6 +144,7 @@ export default function AssemblyPage() {
   };
 
   const handleInputChange = (field: keyof AssembledItem, value: string) => {
+    if (field === "project") updateItemsByProject(value);
     setNewAssembly({ ...newAssembly, [field]: value });
   };
 
@@ -555,24 +538,23 @@ export default function AssemblyPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="item">Product *</Label>
+                <Label htmlFor="project">Project *</Label>
                 <Select
-                  value={newAssembly.item}
-                  onValueChange={(value) => handleInputChange("item", value)}
+                  value={newAssembly.project}
+                  onValueChange={(value) => handleInputChange("project", value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a product" />
+                    <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
                   <SelectContent>
-                    {availableItems.map((item) => (
-                      <SelectItem key={item._id} value={item._id}>
-                        {item.itemName} ({item.sku})
+                    {projects.map((project) => (
+                      <SelectItem key={project._id} value={project._id}>
+                        {project.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
                 <Label htmlFor="employee">Employee *</Label>
                 <Select
@@ -599,20 +581,19 @@ export default function AssemblyPage() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="project">Project *</Label>
+                <Label htmlFor="item">Product *</Label>
                 <Select
-                  value={newAssembly.project}
-                  onValueChange={(value) => handleInputChange("project", value)}
+                  value={newAssembly.item}
+                  onValueChange={(value) => handleInputChange("item", value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a project" />
+                    <SelectValue placeholder="Select a product" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) => (
-                      <SelectItem key={project._id} value={project._id}>
-                        {project.name}
+                    {availableItems.map((item) => (
+                      <SelectItem key={item._id} value={item._id}>
+                        {item.itemName} ({item.sku})
                       </SelectItem>
                     ))}
                   </SelectContent>
