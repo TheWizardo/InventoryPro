@@ -71,6 +71,8 @@ export default function ProjectsPage() {
   const [inventoryAdjustments, setInventoryAdjustments] = useState<
     StockAdjustment[]
   >([]);
+  const [showOverdue, setShowOverdue] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(true)
   const { toast } = useToast();
 
   useEffect(() => {
@@ -108,8 +110,11 @@ export default function ProjectsPage() {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data = await response.json();
+      const data: Project[] = await response.json();
       setProjects(data);
+      for (const p of data) {
+        await fetchAssemblyData(p._id);
+      }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
       toast({
@@ -285,18 +290,29 @@ export default function ProjectsPage() {
     return { assembled, target: targetQuantity };
   };
 
-  const getProjectStatus = (dueDate: string) => {
+  const getProjectStatus = (dueDate: string, products: Project["products"], projectId: string) => {
     const due = new Date(dueDate);
     const now = new Date();
     const diffTime = due.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const isCompleted = products.every((product) => {
 
-    if (diffDays < 0) {
-      return { status: "Overdue", variant: "destructive" as const };
+      const { assembled, target } = getAssemblyProgress(projectId, (product.item as InventoryItem)._id, product.quantity)
+      return assembled >= target
+    })
+
+    if (isCompleted) {
+      return {
+        status: "Completed",
+        variant: "default" as const,
+        bgColor: "bg-green-100 text-green-800 border-green-200",
+      }
+    } else if (diffDays < 0) {
+      return { status: "Overdue", variant: "destructive" as const, bgColor: "" };
     } else if (diffDays <= 7) {
-      return { status: "Due Soon", variant: "secondary" as const };
+      return { status: "Due Soon", variant: "secondary" as const, bgColor: "" };
     } else {
-      return { status: "Active", variant: "default" as const };
+      return { status: "Active", variant: "default" as const, bgColor: "" };
     }
   };
 
@@ -395,9 +411,19 @@ export default function ProjectsPage() {
     );
   };
 
-  const filteredProjects = projects.filter((project) =>
-    project.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase())
+
+    if (!matchesSearch) return false
+
+    const { status } = getProjectStatus(project.dueDate.toString(), project.products, project._id)
+    console.log(project.name, status);
+
+    if (!showOverdue && status === "Overdue") return false;
+    if (!showCompleted && status === "Completed") return false;
+
+    return true
+  })
 
   if (loading) {
     return (
@@ -446,6 +472,22 @@ export default function ProjectsPage() {
                 className="pl-10"
               />
             </div>
+            <div className="flex gap-2">
+              <Button
+                variant={showOverdue ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowOverdue(!showOverdue)}
+              >
+                Show Overdue
+              </Button>
+              <Button
+                variant={showCompleted ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowCompleted(!showCompleted)}
+              >
+                Show Completed
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-md border">
@@ -472,8 +514,10 @@ export default function ProjectsPage() {
                   </TableRow>
                 ) : (
                   filteredProjects.map((project) => {
-                    const { status, variant } = getProjectStatus(
-                      project.dueDate.toString()
+                    const { status, variant, bgColor } = getProjectStatus(
+                      project.dueDate.toString(),
+                      project.products,
+                      project._id
                     );
                     const isExpanded = expandedRows.has(project._id);
                     return (
@@ -503,7 +547,11 @@ export default function ProjectsPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={variant}>{status}</Badge>
+                            {status === "Completed" ? (
+                              <Badge className={bgColor}>{status}</Badge>
+                            ) : (
+                              <Badge variant={variant}>{status}</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
