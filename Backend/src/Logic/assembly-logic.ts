@@ -1,4 +1,7 @@
 import AssembledItem, { IAssembledItem } from "../Models/Assembly-Model";
+import { IProductComponent } from "../Models/InventoryItem-Model";
+import { IProject } from "../Models/Project-Model";
+import * as projectsLogic from "./projects-logic";
 import { Types } from "mongoose";
 
 function generateSerial(date: Date) {
@@ -55,6 +58,27 @@ async function getAssembliesByEmployee(
   return assemblies;
 }
 
+function areItemQuantitiesEqual(
+  arr1: { item: string, quantity: number }[],
+  arr2: { item: string, quantity: number }[]
+): boolean {
+  if (arr1.length !== arr2.length) return false;
+
+  // Build maps for quick lookup
+  const map1 = new Map(arr1.map(({ item, quantity }) => [item, quantity]));
+  const map2 = new Map(arr2.map(({ item, quantity }) => [item, quantity]));
+
+  if (map1.size !== map2.size) return false;
+
+  for (const [item, quantity] of map1) {
+    if (map2.get(item) !== quantity) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 // Add a new assembly
 async function addAssembly(assembly: IAssembledItem): Promise<IAssembledItem> {
   let sn;
@@ -66,6 +90,11 @@ async function addAssembly(assembly: IAssembledItem): Promise<IAssembledItem> {
   assembly.serialNumber = sn;
   const addedAssembly = await AssembledItem.create(assembly);
   const populated = await populateAssembly(addedAssembly);
+  const targetComponents = [...(populated.project as IProject).products].map(c => ({ item: c.item.toString(), quantity: c.quantity }));
+  const projectProgress = (await projectsLogic.getProjectProductsProgress(populated.project._id)).map(c => ({ item: c.item._id.toString(), quantity: c.quantity }));
+  if (areItemQuantitiesEqual(targetComponents, projectProgress)) {
+    projectsLogic.markCompleted(populated.project._id)
+  }
   return populated;
 }
 

@@ -547,7 +547,7 @@ export default function AssemblyPage() {
                     <SelectValue placeholder="Select a project" />
                   </SelectTrigger>
                   <SelectContent>
-                    {projects.map((project) => (
+                    {projects.filter(p => !p.isCompleted).map((project) => (
                       <SelectItem key={project._id} value={project._id}>
                         {project.name}
                       </SelectItem>

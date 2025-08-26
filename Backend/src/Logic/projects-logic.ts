@@ -56,4 +56,10 @@ export async function getProjectProductsProgress(id: string | Types.ObjectId): P
     )
   )
   return projectPtogress;
-} 
+}
+
+export async function markCompleted(id: string | Types.ObjectId): Promise<IProject> {
+  const project = await getProjectById(id.toString());
+  project.isCompleted = true;
+  return await updateProject(id.toString(), project);
+}
