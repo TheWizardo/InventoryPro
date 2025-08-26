@@ -223,6 +223,7 @@ export default function ProductsPage() {
 
       if (response.ok) {
         await fetchProducts();
+        fetchAvailableComponents();
         setIsNewProductOpen(false);
         setNewProduct({
           itemName: "",
@@ -503,6 +504,7 @@ export default function ProductsPage() {
                         }
                       >
                         {product.itemName}
+                        {!product.isSupported && <Badge variant="secondary">Not-Supported</Badge>}
                       </CardTitle>
                     </Link>
                     <p className="text-sm text-muted-foreground">
