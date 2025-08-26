@@ -150,7 +150,7 @@ class InventoryService {
   }
 
   public doesItemUsesNonSupportedComponents(complexItem: InventoryItem): boolean {
-    if (!complexItem.components) {
+    if (!complexItem?.components) {
       return !complexItem.isSupported;
     }
     const allSubitemsSupportedArr = complexItem.components.map(c => this.doesItemUsesNonSupportedComponents(c.item as InventoryItem) || !(c.item as InventoryItem).isSupported);
@@ -194,7 +194,7 @@ class EmployeeService {
     return hash;
   }
   const hash = Math.abs(generateHash(employeeId));
-  
+
   // Distribute hue more evenly
   const hue = hash % 360;
   // Spread saturation between 50–90%
