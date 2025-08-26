@@ -1,5 +1,9 @@
+import { IProductComponent } from "../Models/InventoryItem-Model";
 import Project, { IProject } from "../Models/Project-Model";
 import { Types } from "mongoose";
+import assemblyLogic from "./assembly-logic";
+import { IAssembledItem } from "../Models/Assembly-Model";
+import inventoryItemLogic from "./inventoryItem-logic";
 
 async function populateProject(project: IProject): Promise<IProject> {
   // Populate components one level
@@ -38,3 +42,18 @@ export async function updateProject(
     })
   );
 }
+
+export async function getProjectProductsProgress(id: string | Types.ObjectId): Promise<IProductComponent[]> {
+  const project = await this.getProjectById(id) as IProject;
+  const projectAssemblies = await assemblyLogic.getAssembliesByProject(id) as IAssembledItem[];
+  const projectPtogress = await Promise.all(
+    project.products.map(async (p) => (
+      {
+        item: await inventoryItemLogic.getInventoryItemById(p.item as Types.ObjectId),
+        quantity: projectAssemblies.filter(a => a.item._id.toString() === p.item._id.toString()).length
+      }
+    )
+    )
+  )
+  return projectPtogress;
+} 

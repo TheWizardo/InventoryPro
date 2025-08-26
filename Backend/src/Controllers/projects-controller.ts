@@ -43,6 +43,20 @@ router.get(
   }
 );
 
+// Get project by ID
+router.get(
+  "/api/projects/:id/progress",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const progress = await projectLogic.getProjectProductsProgress(req.params.id);
+      if (!progress) return res.status(404).json({ error: "Project not found" });
+      res.json(progress);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+);
+
 // Update project
 router.put(
   "/api/projects/:id",

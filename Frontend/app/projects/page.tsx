@@ -45,8 +45,7 @@ import {
 import {
   projectService,
   productService,
-  inventoryService,
-  assemblyService
+  inventoryService
 } from "@/lib/services";
 import { Project, InventoryItem, StockAdjustment, AssembledItem, ProductComponent } from "@/lib/types";
 
@@ -61,10 +60,11 @@ export default function ProjectsPage() {
     name: "",
     dueDate: "",
     products: [] as Array<ProductComponent>,
+    isCompleted: false
   });
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [assemblyData, setAssemblyData] = useState<
-    Record<string, AssembledItem[]>
+  const [progressData, setProgressData] = useState<
+    Record<string, ProductComponent[]>
   >({});
   const [products, setProducts] = useState<InventoryItem[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
@@ -113,7 +113,7 @@ export default function ProjectsPage() {
       const data: Project[] = await response.json();
       setProjects(data);
       for (const p of data) {
-        await fetchAssemblyData(p._id);
+        await fetchProgressData(p._id);
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
@@ -127,19 +127,28 @@ export default function ProjectsPage() {
     }
   };
 
-  const fetchAssemblyData = async (projectId: string) => {
+  const fetchProgressData = async (projectId: string) => {
     try {
-      const response = await assemblyService.fetchByProject(projectId);
+      const response = await projectService.getProjectProgress(projectId);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: AssembledItem[] = await response.json();
-      console.log("Assembly data for project", projectId, ":", data);
-      setAssemblyData((prev) => ({ ...prev, [projectId]: data }));
+      const data: ProductComponent[] = await response.json();
+      console.log("Progress data for project", projectId, ":", data);
+      setProgressData((prev) => ({ ...prev, [projectId]: data }));
     } catch (error) {
-      console.error("Failed to fetch assembly data:", error);
+      console.error("Failed to fetch progress data:", error);
     }
   };
+
+  const getAssemblyProgress = (project: Project, item: InventoryItem): { assembled: number, target: number } => {
+    const needed = project.products.filter(p => (p.item as InventoryItem)._id === item._id)[0].quantity;
+    const have = progressData[project._id].filter(p => (p.item as InventoryItem)._id === item._id)[0].quantity;
+    return {
+      assembled: have,
+      target: needed
+    }
+  }
 
   const toggleRowExpansion = (projectId: string) => {
     const newExpandedRows = new Set(expandedRows);
@@ -147,8 +156,8 @@ export default function ProjectsPage() {
       newExpandedRows.delete(projectId);
     } else {
       newExpandedRows.add(projectId);
-      if (!assemblyData[projectId]) {
-        fetchAssemblyData(projectId);
+      if (!progressData[projectId]) {
+        fetchProgressData(projectId);
       }
     }
     setExpandedRows(newExpandedRows);
@@ -204,7 +213,7 @@ export default function ProjectsPage() {
           } successfully`,
       });
 
-      setFormData({ name: "", dueDate: "", products: [] });
+      setFormData({ name: "", dueDate: "", products: [], isCompleted: false });
       setIsNewProjectOpen(false);
       setEditingProject(null);
       fetchProjects();
@@ -228,13 +237,14 @@ export default function ProjectsPage() {
         item: (p.item as InventoryItem)._id,
         quantity: p.quantity,
       })),
+      isCompleted: project.isCompleted
     });
     setIsNewProjectOpen(true);
   };
 
   const handleNewProject = () => {
     setEditingProject(null);
-    setFormData({ name: "", dueDate: "", products: [] });
+    setFormData({ name: "", dueDate: "", products: [], isCompleted: false });
     setIsNewProjectOpen(true);
   };
 
@@ -262,46 +272,13 @@ export default function ProjectsPage() {
     setFormData({ ...formData, products: updatedProducts });
   };
 
-  const getAssemblyProgress = (
-    projectId: string,
-    productId: string,
-    targetQuantity: number
-  ) => {
-    const projectAssemblies = assemblyData[projectId] || [];
-    console.log(
-      "Looking for product",
-      productId,
-      "in assemblies:",
-      projectAssemblies
-    );
-
-    const assembled = projectAssemblies.filter(
-      (a) => (a.item._id === productId)
-    ).length;
-
-    console.log(
-      "Assembly progress for product",
-      productId,
-      ":",
-      assembled,
-      "/",
-      targetQuantity
-    );
-    return { assembled, target: targetQuantity };
-  };
-
-  const getProjectStatus = (dueDate: string, products: Project["products"], projectId: string) => {
-    const due = new Date(dueDate);
+  const getProjectStatus = (project: Project) => {
+    const due = new Date(project.dueDate);
     const now = new Date();
     const diffTime = due.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const isCompleted = products.every((product) => {
 
-      const { assembled, target } = getAssemblyProgress(projectId, (product.item as InventoryItem)._id, product.quantity)
-      return assembled >= target
-    })
-
-    if (isCompleted) {
+    if (project.isCompleted) {
       return {
         status: "Completed",
         variant: "default" as const,
@@ -416,8 +393,7 @@ export default function ProjectsPage() {
 
     if (!matchesSearch) return false
 
-    const { status } = getProjectStatus(project.dueDate.toString(), project.products, project._id)
-    console.log(project.name, status);
+    const { status } = getProjectStatus(project)
 
     if (!showOverdue && status === "Overdue") return false;
     if (!showCompleted && status === "Completed") return false;
@@ -514,11 +490,7 @@ export default function ProjectsPage() {
                   </TableRow>
                 ) : (
                   filteredProjects.map((project) => {
-                    const { status, variant, bgColor } = getProjectStatus(
-                      project.dueDate.toString(),
-                      project.products,
-                      project._id
-                    );
+                    const { status, variant, bgColor } = getProjectStatus(project);
                     const isExpanded = expandedRows.has(project._id);
                     return (
                       <React.Fragment key={project._id}>
@@ -585,11 +557,7 @@ export default function ProjectsPage() {
                                   <div className="space-y-2">
                                     {project.products.map((product, index) => {
                                       const { assembled, target } =
-                                        getAssemblyProgress(
-                                          project._id,
-                                          (product.item as InventoryItem)._id,
-                                          product.quantity
-                                        );
+                                        getAssemblyProgress(project, product.item as InventoryItem);
                                       return (
                                         <div
                                           key={index}

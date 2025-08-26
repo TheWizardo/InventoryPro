@@ -6,12 +6,14 @@ export interface IProject extends BaseDocument {
   name: string;
   dueDate: Date;
   products: IProductComponent[];
+  isCompleted: boolean;
 }
 
 const ProjectSchema = new Schema<IProject>(
   {
     name: { type: String, required: true },
     dueDate: { type: Date, required: true },
+    isCompleted: {type: Boolean, required: true},
     products: {
       type: [ProductComponentSchema],
       required: true

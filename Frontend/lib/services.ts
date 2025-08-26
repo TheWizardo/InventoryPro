@@ -53,6 +53,10 @@ class InventoryService {
     return await baseService.fetch(`${API_CONFIG.ENDPOINTS.INVENTORY}/${id}`);
   }
 
+  public async fetchSeveral(idArr: string[]): Promise<Response> {
+    return await baseService.fetch(`${API_CONFIG.ENDPOINTS.INVENTORY}/many`, "POST", { ids: idArr });
+  }
+
   public async updateItem(
     itemId: string,
     edits: Partial<InventoryItem>
@@ -186,24 +190,24 @@ class EmployeeService {
   }
 
   public generateColor(employeeId: string): string {
-  function generateHash(id: string): number {
-    let hash = 0;
-    for (let i = 0; i < id.length; i++) {
-      hash = id.charCodeAt(i) + ((hash << 5) - hash);
+    function generateHash(id: string): number {
+      let hash = 0;
+      for (let i = 0; i < id.length; i++) {
+        hash = id.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
     }
-    return hash;
+    const hash = Math.abs(generateHash(employeeId));
+
+    // Distribute hue more evenly
+    const hue = hash % 360;
+    // Spread saturation between 50–90%
+    const saturation = 50 + (hash % 41); // 50–90
+    // Spread lightness between 40–70%
+    const lightness = 40 + ((hash >> 3) % 31); // 40–70
+
+    return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }
-  const hash = Math.abs(generateHash(employeeId));
-
-  // Distribute hue more evenly
-  const hue = hash % 360;
-  // Spread saturation between 50–90%
-  const saturation = 50 + (hash % 41); // 50–90
-  // Spread lightness between 40–70%
-  const lightness = 40 + ((hash >> 3) % 31); // 40–70
-
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
 }
 
 class AssemblyService {
@@ -258,6 +262,10 @@ class ProjectService {
 
   public async addProject(newProject: Project): Promise<Response> {
     return await baseService.add<Project>(API_CONFIG.ENDPOINTS.PROJECTS, newProject);
+  }
+
+  public async getProjectProgress(id: string): Promise<Response> {
+    return await baseService.fetch(`${API_CONFIG.ENDPOINTS.PROJECTS}/${id}/progress`);
   }
 }
 

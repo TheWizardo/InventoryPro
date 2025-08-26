@@ -37,6 +37,7 @@ export interface Project {
   name: string;
   dueDate: Date | string;
   products: ProductComponent[];
+  isCompleted: boolean;
 }
 
 export interface StockAdjustment {

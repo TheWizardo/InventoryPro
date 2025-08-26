@@ -106,7 +106,6 @@ async function updateInventoryItem(
       runValidators: true, // validate against schema
     }
   );
-  console.log(updatedInventoryItem)
   return updatedInventoryItem;
 }
 
