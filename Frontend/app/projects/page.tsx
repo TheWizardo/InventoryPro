@@ -293,6 +293,12 @@ export default function ProjectsPage() {
     }
   };
 
+  const getDotColorByAssembled = (assembled: number, target: number): string => {
+    if (assembled === target) return "bg-green-500";
+    if (assembled > 0) return "bg-blue-500";
+    return "bg-primary"
+  }
+
   const StockAdjustmentDialog = ({
     isOpen,
     onOpenChange,
@@ -564,7 +570,7 @@ export default function ProjectsPage() {
                                           className="flex items-center justify-between bg-background p-3 rounded-md border"
                                         >
                                           <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                            <div className={"w-2 h-2 rounded-full " + getDotColorByAssembled(assembled, target)}></div>
                                             <span className="font-medium">
                                               {(product.item as InventoryItem).itemName}
                                             </span>
