@@ -475,7 +475,7 @@ export default function ProductsPage() {
               key={product._id}
               className="hover:shadow-md transition-shadow relative"
             >
-              {inventoryService.doesItemUsesNonSupportedComponents(product) && <TooltipProvider>
+              {product.isSupported && inventoryService.doesItemUsesNonSupportedComponents(product) && <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge
@@ -541,7 +541,7 @@ export default function ProductsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredComplexItems.map((item) => (
             <Card key={item._id} className="hover:shadow-md transition-shadow relative">
-              {inventoryService.doesItemUsesNonSupportedComponents(item) && <TooltipProvider>
+              {item.isSupported && inventoryService.doesItemUsesNonSupportedComponents(item) && <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Badge
