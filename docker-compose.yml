@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    command: ["--bind_ip_all"]
+
+  backend:
+    build: ./Backend
+    container_name: express-backend
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    environment:
+      NODE_ENV: production
+      PORT: 6001
+      MONGO_URI: mongodb://mongo:27017/varmed
+    depends_on:
+      - mongo
+
+  frontend:
+    build: ./Frontend
+    container_name: next-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BACKEND_IP: 192.168.200.89
+      NEXT_PUBLIC_BACKEND_PORT: 6001
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:

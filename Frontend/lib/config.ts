@@ -1,5 +1,5 @@
 export const API_CONFIG = {
-  BASE_URL: "http://127.0.0.1:6001",
+  BASE_URL: `http://192.168.200.89:6001`,
   ENDPOINTS: {
     PRODUCTS: "/api/inventory/products",
     INVENTORY: "/api/inventory",
