@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Package, Settings, Users, Menu, Warehouse, FolderOpen, FileText } from "lucide-react"
+import { ThemeToggle } from "./theme-toggle"
 
 const navigation = [
   {
@@ -49,11 +50,12 @@ export function Navigation() {
     <>
       {/* Desktop Navigation */}
       <nav className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:bg-card md:border-r">
-        <div className="flex items-center h-16 px-6 border-b">
+        <div className="flex items-center jestify-between h-16 px-6 border-b">
           <div className="flex items-center gap-2">
             <Warehouse className="h-8 w-8 text-primary" />
             <span className="text-xl font-bold">Inventory Pro</span>
           </div>
+          <ThemeToggle />
         </div>
         <div className="flex-1 px-4 py-6 space-y-2">
           {navigation.map((item) => {
