@@ -5,6 +5,7 @@ import * as projectsLogic from "./projects-logic";
 import { Types } from "mongoose";
 
 function generateSerial(date: Date) {
+  return "PB-20250828-001"
   const length = 2;
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   var result = `${date.getFullYear() % 10}${chars[date.getMonth()]}`;
@@ -93,7 +94,7 @@ async function addAssembly(assembly: IAssembledItem): Promise<IAssembledItem> {
   const targetComponents = [...(populated.project as IProject).products].map(c => ({ item: c.item.toString(), quantity: c.quantity }));
   const projectProgress = (await projectsLogic.getProjectProductsProgress(populated.project._id)).map(c => ({ item: c.item._id.toString(), quantity: c.quantity }));
   if (areItemQuantitiesEqual(targetComponents, projectProgress)) {
-    projectsLogic.markCompleted(populated.project._id)
+    projectsLogic.markCompletedAs(populated.project._id, true)
   }
   return populated;
 }
@@ -102,7 +103,14 @@ async function addAssembly(assembly: IAssembledItem): Promise<IAssembledItem> {
 async function deleteAssembly(
   id: string | Types.ObjectId
 ): Promise<IAssembledItem | null> {
-  return await AssembledItem.findByIdAndDelete(id);
+  const populated = await getAssemblyById(id);
+  const deletedAssembly = await AssembledItem.findByIdAndDelete(id);
+  const targetComponents = [...(populated.project as IProject).products].map(c => ({ item: c.item.toString(), quantity: c.quantity }));
+  const projectProgress = (await projectsLogic.getProjectProductsProgress(populated.project._id)).map(c => ({ item: c.item._id.toString(), quantity: c.quantity }));
+  if (!areItemQuantitiesEqual(targetComponents, projectProgress)) {
+    projectsLogic.markCompletedAs(populated.project._id, false)
+  }
+  return deletedAssembly;
 }
 
 export default {
