@@ -7,6 +7,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      - ./mongo_dump:/docker-entrypoint-initdb.d:ro
     command: ["--bind_ip_all"]
 
   backend:
