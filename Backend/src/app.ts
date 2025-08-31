@@ -6,11 +6,13 @@ import inventoryController from './Controllers/inventoryItem-controller';
 import assemblyController from './Controllers/assembly-controller';
 import projectsController from './Controllers/projects-controller';
 import logsController from './Controllers/inventoryLog-controller';
+import licenseController from './Controllers/licenseLog-controller';
 import expressRateLimit from 'express-rate-limit';
 import cors from 'cors';
 import logger from './Middleware/logger-mw';
 import config from './Utils/config';
 import {connectToDatabase} from './Utils/dal';
+import validateLicense from './Middleware/licenseValidation-mw';
 connectToDatabase();
 
 
@@ -22,6 +24,8 @@ server.use("/", expressRateLimit({windowMs: 500, max: 20, message: "Please try a
 
 server.use(express.json());
 server.use(logger); ///////////////////////////////////////////////////////////////////////////////////////////////
+server.use("/", licenseController);
+server.use(validateLicense);
 server.use("/", employeesController);
 server.use("/", inventoryController);
 server.use("/", assemblyController);

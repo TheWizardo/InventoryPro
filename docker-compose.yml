@@ -19,6 +19,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 6001
+      CLIENT: varmed
       MONGO_URI: mongodb://mongo:27017/varmed
     depends_on:
       - mongo

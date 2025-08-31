@@ -1,10 +1,7 @@
 import mongoose from "mongoose";
+import config from "./config";
 
-const mongoUri = process.env?.MONGO_URI || "mongodb://localhost:27017/varmed";
-
-if (!mongoUri) {
-    throw new Error("Missing MONGO_URI environment variable");
-}
+const mongoUri = process.env?.MONGO_URI || "mongodb://localhost:27017/" + config.client;
 
 /**
  * Connect to MongoDB using Mongoose.
