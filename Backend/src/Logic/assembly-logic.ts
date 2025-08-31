@@ -5,7 +5,6 @@ import * as projectsLogic from "./projects-logic";
 import { Types } from "mongoose";
 
 function generateSerial(date: Date) {
-  return "PB-20250828-001"
   const length = 2;
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   var result = `${date.getFullYear() % 10}${chars[date.getMonth()]}`;
