@@ -1,13 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { cn } from "@/lib/utils"
-import { LayoutDashboard, Package, Settings, Users, Menu, Warehouse, FolderOpen, FileText } from "lucide-react"
+import { LayoutDashboard, Package, Info, Users, Menu, Warehouse, FolderOpen, FileText, Boxes } from "lucide-react"
 import { ThemeToggle } from "./theme-toggle"
+import { useLicense } from "@/components/license-provider"
 
 const navigation = [
   {
@@ -23,7 +24,7 @@ const navigation = [
   {
     name: "Assembly",
     href: "/assembly",
-    icon: Settings,
+    icon: Boxes,
   },
   {
     name: "Projects",
@@ -40,20 +41,37 @@ const navigation = [
     href: "/log",
     icon: FileText,
   },
+  {
+    name: "About",
+    href: "/about",
+    icon: Info,
+  },
 ]
 
 export function Navigation() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
+  const [validLicense, setValidLicense] = useState(true)
+  const { isLicenseValid } = useLicense()
+
 
   return (
     <>
       {/* Desktop Navigation */}
-      <nav className="hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:bg-card md:border-r">
+      <nav className={cn(
+        "hidden md:flex md:flex-col md:w-64 md:fixed md:inset-y-0 md:bg-card md:border-r",
+        !isLicenseValid && "bg-red-50 dark:bg-red-950",
+      )}>
         <div className="flex items-center jestify-between h-16 px-6 border-b">
           <div className="flex items-center gap-2">
-            <Warehouse className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold">Inventory Pro</span>
+            <Warehouse className={cn(
+                "h-8 w-8 text-primary",
+                !isLicenseValid && "text-red-600 dark:text-red-400",
+              )} />
+            <span className={cn(
+                "text-xl font-bold",
+                !isLicenseValid && "text-red-600 dark:text-red-400",
+              )}>Inventory Pro</span>
           </div>
           <ThemeToggle />
         </div>
@@ -79,7 +97,7 @@ export function Navigation() {
       {/* Mobile Navigation */}
       <div className="md:hidden">
         <div className="flex items-center justify-between h-16 px-4 border-b bg-card">
-          <div className="flex items-center gap-2">
+          <div className={"flex items-center gap-2" + (validLicense ? "" : " bg-destructive")}>
             <Warehouse className="h-6 w-6 text-primary" />
             <span className="text-lg font-bold">Inventory Pro</span>
           </div>
@@ -91,7 +109,7 @@ export function Navigation() {
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
               <div className="flex items-center h-16 px-6 border-b">
-                <div className="flex items-center gap-2">
+                <div className={"flex items-center gap-2" + (validLicense ? "" : " bg-destructive")}>
                   <Warehouse className="h-8 w-8 text-primary" />
                   <span className="text-xl font-bold">Inventory Pro</span>
                 </div>

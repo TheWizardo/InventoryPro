@@ -7,9 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Calendar, User, FileText, ChevronDown, ChevronRight } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { getApiUrl } from "@/lib/config"
 import { employeeService, logService } from "@/lib/services"
 import { InventoryItem, LogRegistry } from "@/lib/types"
+import { useLicense } from "@/components/license-provider"
 
 export default function LogPage() {
   const [logs, setLogs] = useState<LogRegistry[]>([])
@@ -17,9 +17,11 @@ export default function LogPage() {
   const [dateFilter, setDateFilter] = useState<string>("all")
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const { toast } = useToast()
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     fetchLogs()
+    fetchLicense()
   }, [])
 
   const fetchLogs = async () => {

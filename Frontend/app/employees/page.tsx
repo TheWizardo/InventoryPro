@@ -25,6 +25,7 @@ import { Plus, UserCheck, UserX, Edit, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Employee } from "@/lib/types";
 import { employeeService } from "@/lib/services";
+import { useLicense } from "@/components/license-provider";
 
 export default function EmployeesPage() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -39,9 +40,11 @@ export default function EmployeesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     fetchEmployees();
+    fetchLicense();
   }, []);
 
   useEffect(() => {

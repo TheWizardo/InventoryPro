@@ -35,6 +35,7 @@ import { inventoryService, logService, employeeService } from "@/lib/services";
 import { InventoryItem, Employee, LogRegistryBackend } from "@/lib/types";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useLicense } from "@/components/license-provider";
 
 interface StockAdjustmentString {
   _id: string;
@@ -267,9 +268,7 @@ export default function InventoryDashboard() {
   const [allEmployees, setAllEmployees] = useState<Employee[]>([]);
   const [employeeId, setEmployeeId] = useState<string>();
   const [stockEdits, setStockEdits] = useState<StockEdit[]>([]);
-  const [stockAdjustments, setStockAdjustments] = useState<StockAdjustmentString[]>(
-    []
-  );
+  const [stockAdjustments, setStockAdjustments] = useState<StockAdjustmentString[]>([]);
   const [isAddStockOpen, setIsAddStockOpen] = useState(false);
   const [isRemoveStockOpen, setIsRemoveStockOpen] = useState(false);
   const [isNewItemOpen, setIsNewItemOpen] = useState(false); // Add state for new item dialog
@@ -299,10 +298,12 @@ export default function InventoryDashboard() {
     minStock: 0,
   });
   const { toast } = useToast();
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     fetchInventory();
     fetchEmployees();
+    fetchLicense();
   }, []);
 
   const fetchInventory = async () => {

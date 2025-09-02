@@ -7,7 +7,8 @@ export const API_CONFIG = {
     ASSEMBLY: "/api/assemblies",
     PROJECTS: "/api/projects",
     LOGS: "/api/logs",
-  },
+    LICENSE: "/api/license",
+  }
 } as const
 
 // Helper function to build full API URLs

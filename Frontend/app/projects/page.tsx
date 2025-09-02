@@ -48,6 +48,7 @@ import {
   inventoryService
 } from "@/lib/services";
 import { Project, InventoryItem, StockAdjustment, AssembledItem, ProductComponent } from "@/lib/types";
+import { useLicense } from "@/components/license-provider";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -74,10 +75,12 @@ export default function ProjectsPage() {
   const [showOverdue, setShowOverdue] = useState(false)
   const [showCompleted, setShowCompleted] = useState(true)
   const { toast } = useToast();
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     fetchProjects();
     fetchInventoryItems();
+    fetchLicense();
   }, []);
 
   const fetchInventoryItems = async () => {

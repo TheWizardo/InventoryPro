@@ -28,6 +28,7 @@ import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { InventoryItem } from "@/lib/types";
 import { inventoryService, productService } from "@/lib/services";
+import { useLicense } from "@/components/license-provider";
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<InventoryItem[]>([]);
@@ -58,10 +59,12 @@ export default function ProductsPage() {
     InventoryItem[]
   >([]); // Added state for available components
   const { toast } = useToast();
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     fetchProducts();
     fetchAvailableComponents(); // Fetch available components on mount
+    fetchLicense();
   }, []);
 
   useEffect(() => {

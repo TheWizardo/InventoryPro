@@ -303,6 +303,31 @@ class LogService {
   }
 }
 
+class LicenseService {
+  private LicenseEnd: { licenseEnd: Date } | null;
+  constructor() {
+    this.LicenseEnd = null;
+  }
+
+  public getLicenseEnd(): { licenseEnd: Date } | null {
+    return this.LicenseEnd
+  }
+
+  public setLicenseEnd(l: { licenseEnd: Date }) {
+    this.LicenseEnd = l
+  }
+
+  public async fetchDate(): Promise<Response> {
+    return await baseService.fetch(API_CONFIG.ENDPOINTS.LICENSE);
+  }
+
+  public isValid(): boolean {
+    const now = new Date();
+    if (this.LicenseEnd === null) return false;
+    return (this.LicenseEnd.licenseEnd.getTime() - now.getTime()) > 0;
+  }
+}
+
 const baseService = new BaseService();
 export const inventoryService = new InventoryService();
 export const employeeService = new EmployeeService();
@@ -310,3 +335,4 @@ export const assemblyService = new AssemblyService();
 export const productService = new ProductService();
 export const projectService = new ProjectService();
 export const logService = new LogService();
+export const licenseService = new LicenseService();

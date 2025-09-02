@@ -12,8 +12,9 @@ import { ArrowLeft, Save, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import { Employee, InventoryItem, LogRegistryBackend } from "@/lib/types";
-import { employeeService, inventoryService, logService } from "@/lib/services";
+import { employeeService, inventoryService, licenseService, logService } from "@/lib/services";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLicense } from "@/components/license-provider";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -26,11 +27,13 @@ export default function ProductDetailPage() {
   const [editedProduct, setEditedProduct] = useState<InventoryItem | null>(
     null
   );
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     if (params.id) {
       fetchProduct(params.id as string);
       fetchEmployees();
+      fetchLicense();
     }
   }, [params.id]);
 

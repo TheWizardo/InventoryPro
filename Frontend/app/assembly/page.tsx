@@ -32,7 +32,7 @@ import {
   Plus,
   Calendar,
   User,
-  Package,
+  Boxes,
   Hash,
   Trash2,
   Settings,
@@ -43,13 +43,13 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   assemblyService,
-  productService,
   employeeService,
   projectService,
   inventoryService,
   logService,
 } from "@/lib/services";
 import { InventoryItem, AssembledItem, Project, Employee, LogRegistryBackend } from "@/lib/types"; // adjust import paths
+import { useLicense } from "@/components/license-provider";
 
 type SortField =
   | "serialNumber"
@@ -86,11 +86,13 @@ export default function AssemblyPage() {
   const [sortField, setSortField] = useState<SortField>("productionDate");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const { toast } = useToast();
+  const { fetchLicense } = useLicense()
 
   useEffect(() => {
     fetchAssemblies();
     fetchEmployees();
     fetchProjects();
+    fetchLicense();
 
     // Set default date to today
     const today = new Date().toISOString().split("T")[0];
@@ -231,6 +233,7 @@ export default function AssemblyPage() {
       const response = await assemblyService.deleteAssembly(id);
       if (response.ok) {
         await fetchAssemblies();
+        await fetchProjects();
         toast({
           title: "Success",
           description: "Assembly deleted successfully",
@@ -417,7 +420,7 @@ export default function AssemblyPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
+              <Boxes className="h-5 w-5" />
               All Assemblies
               <Badge variant="secondary">{displayedAssemblies.length}</Badge>
             </CardTitle>
@@ -512,7 +515,7 @@ export default function AssemblyPage() {
             </Table>
           ) : (
             <div className="text-center py-12">
-              <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <Boxes className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">
                 No assemblies found
               </h3>
