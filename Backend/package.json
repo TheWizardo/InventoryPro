@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/app.js",
     "start-ts": "nodemon",
-    "build": "tsc"
+    "build": "tsc; robocopy src/Assets dist/Assets"
   },
   "keywords": [],
   "author": "",
