@@ -39,7 +39,7 @@ class LicenseLogic {
     }
   }
 
-  public async fetchLicense() {
+  public async fetchEncryptedLicense() {
     const res = await fetch(config.licenseURL);
     const lic = await res.text();
     return lic

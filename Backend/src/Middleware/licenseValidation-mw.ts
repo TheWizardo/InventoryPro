@@ -4,7 +4,7 @@ import { UnauthorizedError } from "../Models/client-errors";
 import catchAll from "./catch-all";
 
 function validateLicense(req: Request, res: Response, next: NextFunction): void {
-    licenseLogic.fetchLicense().then(cipher => {
+    licenseLogic.fetchEncryptedLicense().then(cipher => {
         const dateString = licenseLogic.decryptJsonMessage<{ licenseEnd: string }>(cipher).licenseEnd;
         if (dateString === "Invalid") {
             throw new UnauthorizedError("Invalid License");
