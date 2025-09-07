@@ -543,7 +543,7 @@ export default function InventoryDashboard() {
 
   const handleCreateItem = async () => {
     // Add function to create new item
-    if (!newItem.itemName || !newItem.sku || !newItem.vendor || !newItem.stock || !newItem.minStock) {
+    if (!newItem.itemName || !newItem.sku || !newItem.vendor || !newItem.stock || (!newItem.minStock && newItem.minStock !== 0)) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
