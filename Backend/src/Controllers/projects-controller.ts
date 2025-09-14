@@ -71,4 +71,15 @@ router.put(
   }
 );
 
+router.delete(
+  "/api/projects/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await projectLogic.deleteProject(req.params.id));
+    } catch (err: any) {
+      next(err);
+    }
+  }
+);
+
 export default router;

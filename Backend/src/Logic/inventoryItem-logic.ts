@@ -1,14 +1,49 @@
-import InventoryItem, {
-  IInventoryItem,
-} from "../Models/InventoryItem-Model";
+import InventoryItem, { IInventoryItem } from "../Models/InventoryItem-Model";
+import AssembledItem from "../Models/Assembly-Model";
+import LogRegistry from "../Models/LogRegistry-Model";
+import Project from "../Models/Project-Model";
 import { Types } from "mongoose";
-import { InvalidData } from "../Models/client-errors";
+import { ForbiddenError, InvalidData } from "../Models/client-errors";
 
-export function isItemId(
+function isItemId(
   item: Types.ObjectId | IInventoryItem
 ): item is Types.ObjectId {
   if (typeof item === "string") return true;
   return item instanceof Types.ObjectId;
+}
+
+async function itemDependencies(itemId: Types.ObjectId | string): Promise<string> {
+  let dep = "<p>";
+
+  // 1. Check if used in any Project
+  const projects = await Project.find(
+    { "products.item": itemId },
+    { name: 1 } // projection: return only projectName
+  );
+  console.log("projects", projects);
+  if (projects.length > 0) dep += `Projects:<ul>${projects.map(p => `<li><i>- ${p.name}</i></li>`).join("")}</ul>`;
+
+  // 2. Check if used in any AssembledItem
+  const assemblies = await AssembledItem.find({ item: itemId }, { serialNumber: 1 });
+  if (assemblies.length > 0) dep += `Assemblies:<ul>${assemblies.map(a => `<li><i>- ${a.serialNumber}</i></li>`).join("")}</ul>`;
+
+  // 3. Check if used in any LogRegistry
+  const logs = await LogRegistry.find({ "items.item": itemId }, { registrationDate: 1 });
+  if (logs.length > 0) dep += `Logs:<ul>${logs.map(l => `<li><i>- ${(new Date(l.registrationDate)).toUTCString()}</i></li>`).join("")}</ul>`;
+
+  // 4. Check if used as component of another InventoryItem
+  const inventoryItems = await InventoryItem.find({ "components.item": itemId }, { itemName: 1 });
+  if (inventoryItems.length > 0) dep += `Inventory Items:<ul>${inventoryItems.map(i => `<li><i>- ${i.itemName}</i></li>`).join("")}</ul>`;
+
+  return dep.trim() + "</p>";
+}
+
+async function deleteItem(itemId: Types.ObjectId | string): Promise<IInventoryItem | null> {
+  const deps = await itemDependencies(itemId);
+  if (deps.length > 7) throw new ForbiddenError(`<p>Item has the following dependencies:</p>${deps}`);
+
+  const deletedItem = await InventoryItem.findByIdAndDelete(itemId);
+  return deletedItem;
 }
 
 async function populateItemDeep(item: IInventoryItem): Promise<IInventoryItem> {
@@ -49,7 +84,7 @@ async function getItemsByAssembled(yes: boolean): Promise<IInventoryItem[]> {
 }
 
 // Get all inventory items
-export async function getAllInventoryItems(): Promise<IInventoryItem[]> {
+async function getAllInventoryItems(): Promise<IInventoryItem[]> {
   const allItems = await InventoryItem.find();
 
   // Await the population of all items
@@ -153,6 +188,7 @@ async function getAllVendors(): Promise<string[]> {
 }
 
 export default {
+  deleteItem,
   getAllInventoryItems,
   getInventoryItemById,
   getSeveralInventoryItems,
@@ -162,4 +198,5 @@ export default {
   adjustStock,
   overrideStock,
   getAllVendors,
+  itemDependencies,
 };

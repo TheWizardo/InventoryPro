@@ -1,9 +1,11 @@
 import { IProductComponent } from "../Models/InventoryItem-Model";
 import Project, { IProject } from "../Models/Project-Model";
+import AssembledItem from "../Models/Assembly-Model";
 import { Types } from "mongoose";
 import assemblyLogic from "./assembly-logic";
 import { IAssembledItem } from "../Models/Assembly-Model";
 import inventoryItemLogic from "./inventoryItem-logic";
+import { ForbiddenError } from "../Models/client-errors";
 
 async function populateProject(project: IProject): Promise<IProject> {
   // Populate components one level
@@ -62,4 +64,22 @@ export async function markCompletedAs(id: string | Types.ObjectId, completed: bo
   const project = await getProjectById(id.toString());
   project.isCompleted = completed;
   return await updateProject(id.toString(), project);
+}
+
+async function projectDependencies(projectId: Types.ObjectId | string): Promise<string> {
+  let dep = "<p>";
+
+  // 1. Check if used in any AssembledItem
+  const assemblies = await AssembledItem.find({ project: projectId }, { serialNumber: 1 });
+  if (assemblies.length > 0) dep += `Assemblies:<ul>${assemblies.map(a => `<li><i>- ${a.serialNumber}</i></li>`).join("")}</ul>`;
+
+  return dep.trim()+"</p>";
+}
+
+export async function deleteProject(id: Types.ObjectId | string): Promise<IProject | null> {
+  const deps = await projectDependencies(id);
+  if (deps.length > 7) throw new ForbiddenError(`<p>Project cannot be deleted. Project has the following dependencies:</p>${deps}`);
+
+  const deletedProject = await Project.findByIdAndDelete(id);
+  return deletedProject;
 }

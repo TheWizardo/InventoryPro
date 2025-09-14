@@ -40,4 +40,16 @@ router.put(
     }
 )
 
+router.delete(
+    "/api/employees/:_id",
+    async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const deletedEmployee = await employeeLogic.deleteEmployee(req.params._id);
+      res.json(deletedEmployee);
+    } catch (err: any) {
+      next(err);
+    }
+    }
+)
+
 export default router;

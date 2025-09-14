@@ -131,4 +131,30 @@ router.patch(
   }
 );
 
+router.delete(
+  "/api/inventory/:id",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      res.json(await inventoryItemLogic.deleteItem(req.params.id));
+    } catch (err: any) {
+      next(err);
+    }
+  }
+);
+
+router.patch(
+  "/api/inventory/override-stock",
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const overrides = req.body as { _id: string; newStock: number }[];
+      const updatedItems = await inventoryItemLogic.overrideStock(overrides);
+      res.json(updatedItems);
+    } catch (err: any) {
+      next(err);
+    }
+  }
+);
+
+
+
 export default router;
