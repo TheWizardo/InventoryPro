@@ -366,7 +366,7 @@ export default function AssemblyPage() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Assembly Management</h1>
         <p className="text-muted-foreground">
-          Track and manage product assemblies
+          View information about assembled products
         </p>
       </div>
 

@@ -443,7 +443,7 @@ export default function ProjectsPage() {
             All Projects ({filteredProjects.length})
           </CardTitle>
           <CardDescription>
-            Track project progress and manage deadlines
+            Track project progress and deadlines
           </CardDescription>
         </CardHeader>
         <CardContent>

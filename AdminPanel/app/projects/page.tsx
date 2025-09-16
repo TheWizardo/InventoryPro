@@ -489,7 +489,7 @@ export default function ProjectsPage() {
         <div>
           <h1 className="text-3xl font-bold">Projects</h1>
           <p className="text-muted-foreground">
-            Manage your project timeline and deadlines
+            Track project progress and deadlines
           </p>
         </div>
         <Button onClick={handleNewProject}>

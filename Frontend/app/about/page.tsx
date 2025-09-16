@@ -25,7 +25,6 @@ export default function AboutPage() {
         <div className="p-6 max-w-4xl mx-auto space-y-6">
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold tracking-tight">About Inventory Pro</h1>
-                <p className="text-muted-foreground">Learn more about our inventory management system</p>
             </div>
 
             <Card>
@@ -38,11 +37,10 @@ export default function AboutPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-sm leading-relaxed">
-                        Inventory Pro is a comprehensive inventory management system designed to streamline your business
-                        operations. Our platform provides real-time tracking of products, assembly management, project coordination,
-                        and employee oversight. With features including automated inventory logging, assembly progress tracking,
-                        vendor management, and detailed reporting, Inventory Pro helps businesses maintain optimal stock levels,
-                        reduce waste, and improve operational efficiency across all departments.
+                        Inventory Pro© is a comprehensive inventory management system designed to streamline your business
+                        operations and assembly managment.<br/>
+                        Our platform provides real-time tracking of inventory, assembled products, project progression,
+                        and employee oversight.
                     </p>
 
                     <div className="flex items-center gap-2 pt-4 border-t">

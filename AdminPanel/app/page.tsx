@@ -647,7 +647,7 @@ export default function InventoryDashboard() {
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Inventory Dashboard</h1>
         <p className="text-muted-foreground">
-          Manage your inventory stock levels and adjustments
+          Manage your inventory stock levels and make adjustments
         </p>
       </div>
 

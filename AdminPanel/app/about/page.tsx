@@ -38,11 +38,10 @@ export default function AboutPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <p className="text-sm leading-relaxed">
-                        Inventory Pro is a comprehensive inventory management system designed to streamline your business
-                        operations. Our platform provides real-time tracking of products, assembly management, project coordination,
-                        and employee oversight. With features including automated inventory logging, assembly progress tracking,
-                        vendor management, and detailed reporting, Inventory Pro helps businesses maintain optimal stock levels,
-                        reduce waste, and improve operational efficiency across all departments.
+                        Inventory Pro Admin© is a streamlined way to extend the capabilities of your Inventory Pro© system.<br/>
+                        Featuring all the same, familiar screens along side the option to safely delete and alter otherwise
+                        locked down entries from the inventory database.<br/>
+                        With great power comes great responsibility.
                     </p>
 
                     <div className="flex items-center gap-2 pt-4 border-t">

@@ -270,7 +270,7 @@ export default function ProductsPage() {
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Products Management</h1>
           <p className="text-muted-foreground">
-            Manage your inventory items and assembly products
+            Manage Complex items and Product blueprints
           </p>
         </div>
         <div className="flex gap-2">

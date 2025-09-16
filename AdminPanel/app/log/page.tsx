@@ -128,7 +128,7 @@ export default function LogPage() {
     <div className="container mx-auto p-6 space-y-6">
       <div className="space-y-2">
         <h1 className="text-3xl font-bold">Inventory Log</h1>
-        <p className="text-muted-foreground">View all inventory log registries and transactions</p>
+        <p className="text-muted-foreground">View a history of all adjustments made to your inventory</p>
       </div>
 
       <Card>
