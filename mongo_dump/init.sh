@@ -10,10 +10,10 @@ done
 
 echo "MongoDB is up, importing data..."
 
-mongoimport --db <db_name> --collection Projects --drop --file Projects.json --jsonArray
-mongoimport --db <db_name> --collection Employees --drop --file Employees.json --jsonArray
-mongoimport --db <db_name> --collection Inventory --drop --file Inventory.json --jsonArray
-mongoimport --db <db_name> --collection InventoryLog --drop --file InventoryLog.json --jsonArray
-mongoimport --db <db_name> --collection Assembly --drop --file Assembly.json --jsonArray
+mongoimport --db "${MONGO_DB}" --collection Projects --drop --file Projects.json --jsonArray
+mongoimport --db "${MONGO_DB}" --collection Employees --drop --file Employees.json --jsonArray
+mongoimport --db "${MONGO_DB}" --collection Inventory --drop --file Inventory.json --jsonArray
+mongoimport --db "${MONGO_DB}" --collection InventoryLog --drop --file InventoryLog.json --jsonArray
+mongoimport --db "${MONGO_DB}" --collection Assembly --drop --file Assembly.json --jsonArray
 
 echo "MongoDB seeding complete."
