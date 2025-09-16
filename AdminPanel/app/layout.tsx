@@ -10,7 +10,7 @@ import { Footer } from "@/components/footer"
 import { LicenseProvider } from "@/components/license-provider"
 
 export const metadata: Metadata = {
-  title: "Inventory Pro",
+  title: "Inventory Admin",
   description: "Inventory and project management dashboard",
   generator: "inventory.app",
 }
