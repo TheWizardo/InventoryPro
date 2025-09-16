@@ -43,5 +43,18 @@ services:
     depends_on:
       - backend
 
+  admin:
+    build: ./AdminPanel
+    container_name: next-admin
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_BACKEND_IP: 192.168.200.89
+      NEXT_PUBLIC_BACKEND_PORT: 6001
+    depends_on:
+      - backend
+
 volumes:
   mongo_data:
