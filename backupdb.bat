@@ -1,4 +1,5 @@
 @echo off
+setlocal enabledelayedexpansion
 REM Backup MongoDB running in Docker
 
 REM === CONFIG ===
@@ -7,6 +8,34 @@ set DB_NAME=<db_Name>
 set HOST_BACKUP_DIR=%programdata%\InventoryPro\mongo_backups
 set CONTAINER_BACKUP_DIR=/backup
 SET COLLECTIONS=Inventory Assembly InventoryLog Employees Projects
+SET BACK_RECORD=5
+
+pushd "%HOST_BACKUP_DIR%"
+
+for /f "tokens=* delims=" %%a in ('dir /b /ad-h /o-d') do (
+    set /a COUNT+=1
+    set "FOLDER[!COUNT!]=%%a"
+)
+
+if not defined COUNT (
+    echo No backup folders found in %HOST_BACKUP_DIR%.
+    popd
+    exit /b 0
+)
+
+echo Found !COUNT! backup folders.
+echo Keeping newest %BACK_RECORD%, deleting the rest.
+
+REM ===========================
+REM Delete oldest ones
+REM ===========================
+for /l %%i in (%BACK_RECORD%+1,1,!COUNT!) do (
+    echo Deleting "!FOLDER[%%i]!"...
+    rmdir /s /q "!FOLDER[%%i]!"
+)
+
+popd
+
 
 REM === Get timestamp in YYYY-MM-DD_HH-MM ===
 for /f "skip=1" %%x in ('wmic os get localdatetime') do if not defined mydate set mydate=%%x
