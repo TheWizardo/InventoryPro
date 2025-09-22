@@ -1,0 +1,62 @@
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo_dump:/docker-entrypoint-initdb.d:ro
+    command: ["--bind_ip_all"]
+    environment:
+      MONGO_DB: ${CLIENT}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: inventorypro-backend   # <--- use local built image
+    container_name: express-backend
+    restart: unless-stopped
+    ports:
+      - "6001:6001"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${BACKEND_PORT}
+      CLIENT: ${CLIENT}
+      MONGO_URI: ${MONGO_URI}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  frontend:
+    image: inventorypro-frontend   # <--- use local built image
+    container_name: next-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      NEXT_PUBLIC_BACKEND_IP: ${BACKEND_IP}
+      NEXT_PUBLIC_BACKEND_PORT: ${BACKEND_PORT}
+    depends_on:
+      - backend
+
+  admin:
+    image: inventorypro-admin   # <--- use local built image
+    container_name: next-admin
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      NEXT_PUBLIC_BACKEND_IP: ${BACKEND_IP}
+      NEXT_PUBLIC_BACKEND_PORT: ${BACKEND_PORT}
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
